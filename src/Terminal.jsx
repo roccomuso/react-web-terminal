@@ -27,11 +27,12 @@ class Terminal extends Component {
   registerCommands() {
     this.setState({
       commands: {
-        'clear': this.clearHistory,
-        'ls': this.listFiles,
         'intro': this.showWelcomeMsg,
         'help': this.showHelp,
-        'github': this.openLink('https://github.com/roccomuso')
+        'github': this.openLink('https://github.com/roccomuso'),
+        'source': this.openLink('https://github.com/roccomuso/react-web-terminal'),
+        'ls': this.listFiles,
+        'clear': this.clearHistory
       }
     });
   }
@@ -53,14 +54,12 @@ class Terminal extends Component {
 
   showHelp() {
     this.addHistory([
+      "intro - print intro message",
       "help - this help text",
       "github - view my github profile",
       "source - browse the code for this page",
-      "intro - print intro message",
-      "blog - read some stuff that I've written",
-      "clear - clear screen",
       "ls - list files",
-      "resume - view my resume"
+      "clear - clear screen"
     ])
   }
 
