@@ -18,6 +18,8 @@ class Terminal extends Component {
     this.listFiles = this.listFiles.bind(this)
     this.showWelcomeMsg = this.showWelcomeMsg.bind(this)
     this.showHelp = this.showHelp.bind(this)
+    this.handleClick = this.handleClick.bind(this)
+    this.handleInput = this.handleInput.bind(this)
   }
 
   clearHistory() {
@@ -122,11 +124,11 @@ class Terminal extends Component {
     return (
       <Scrollbars style={{ width: 715 }} autoHeight autoHeightMin={100} autoHeightMax={400} ref={elem => this.scrollBar = elem} autoHide autoHideTimeout={1000} autoHideDuration={200}>
         <div id="content">
-          <div className='input-area' onClick={this.handleClick.bind(this)}>
+          <div className='input-area' onClick={this.handleClick}>
             {output}
             <p>
               <span className="prompt">{this.state.prompt}</span>
-              <input type="text" onKeyPress={this.handleInput.bind(this)} ref={elem => this.term = elem}/>
+              <input type="text" onKeyPress={this.handleInput} ref={elem => this.term = elem}/>
             </p>
           </div>
         </div>
