@@ -11,15 +11,6 @@ class Terminal extends Component {
       history: [],
       prompt: '$ '
     }
-
-    /* bind Methods to the Component scope */
-    this.clearHistory = this.clearHistory.bind(this)
-    this.registerCommands = this.registerCommands.bind(this)
-    this.listFiles = this.listFiles.bind(this)
-    this.showWelcomeMsg = this.showWelcomeMsg.bind(this)
-    this.showHelp = this.showHelp.bind(this)
-    this.handleClick = this.handleClick.bind(this)
-    this.handleInput = this.handleInput.bind(this)
   }
 
   clearHistory() {
@@ -90,7 +81,7 @@ class Terminal extends Component {
       if (command === undefined) {
         this.addHistory("sh: command not found: " + input);
       } else {
-        command(arg);
+        command.call(this, arg);
       }
       this.clearInput();
     }
@@ -124,11 +115,11 @@ class Terminal extends Component {
     return (
       <Scrollbars style={{ width: 715 }} autoHeight autoHeightMin={100} autoHeightMax={400} ref={elem => this.scrollBar = elem} autoHide autoHideTimeout={1000} autoHideDuration={200}>
         <div id="content">
-          <div className='input-area' onClick={this.handleClick}>
+          <div className='input-area' onClick={this.handleClick.bind(this)}>
             {output}
             <p>
               <span className="prompt">{this.state.prompt}</span>
-              <input type="text" onKeyPress={this.handleInput} ref={elem => this.term = elem}/>
+              <input type="text" onKeyPress={this.handleInput.bind(this)} ref={elem => this.term = elem}/>
             </p>
           </div>
         </div>
