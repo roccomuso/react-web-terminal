@@ -1,12 +1,12 @@
 {
-  "name": "react-web-terminal-bank",
+  "name": "web-bank-terminal",
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "react": "^17.0.1",
+    "react": "^15.6.1",
     "react-custom-scrollbars": "^4.1.2",
-    "react-dom": "^17.0.1",
-    "react-scripts": "^4.0.1"
+    "react-dom": "^15.6.1",
+    "react-scripts": "1.0.8"
   },
   "scripts": {
     "start": "react-scripts start",
