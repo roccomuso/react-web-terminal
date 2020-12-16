@@ -34,6 +34,7 @@ build/Release
 
 # Dependency directories
 node_modules/
+public/build/
 jspm_packages/
 
 # Typescript v1 declaration files
@@ -56,4 +57,9 @@ typings/
 
 # dotenv environment variables file
 .env
+
+# mac and vs code files
+.DS_Store
+*.code-workspace
+.vscode
 
