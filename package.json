@@ -19,7 +19,7 @@
   "bugs": {
     "url": "https://github.com/zakhov/react-web-terminal/issues"
   },
-  "homepage": "https://github.com/zakhov/react-web-terminal#readme",
+  "homepage": "/build",
   "browserslist": {
     "production": [
       ">0.2%",
