@@ -9,7 +9,7 @@ class Terminal extends Component {
       commands: {},
       is_authenticated: false,
       active_client: null,
-      clients: [{ name: 'Bob', balance: 0, debit: {}, credit: {} }],
+      clients: [{ name: 'Bob', balance: 0, adjustment: {} }],
       history: [],
       prompt: '$ ',
     }
@@ -49,7 +49,7 @@ class Terminal extends Component {
       this.clearInput()
       return
     } else {
-      this.addHistory([`Your account balance is ${balance}`])
+      this.addHistory([`Your account balance is ${balance}.`])
       this.clearInput()
     }
   }
@@ -62,7 +62,7 @@ class Terminal extends Component {
 
   async performTopUp(amount) {
     if (isNaN(amount)) {
-      this.addHistory('Invalid entry, please enter a valid amount')
+      this.addHistory('Invalid entry, please enter a valid amount.')
       this.clearInput()
     } else {
       const curr_client = this.getClientByName(this.state.active_client)
@@ -70,13 +70,39 @@ class Terminal extends Component {
       const client_obj = this.state.clients.map((client) => {
         return { ...client }
       })
+      const messages = []
+      let final_balance = balance
+      if (!this.isEmptyObject(curr_client.adjustment)) {
+        const self = this
+        for (const key of Object.keys(curr_client.adjustment)) {
+          if (curr_client.adjustment[key].debit > 0) {
+            const loan = curr_client.adjustment[key].debit
+            if (final_balance >= loan) {
+              final_balance = final_balance - loan
+              await self.updateAdjustment(client_obj, key, curr_client.name, 0)
+              const target_balance = self.getClientByName(key).balance + loan
+              await self.updateBalanceByAccount(client_obj, key, target_balance)
+              messages.push(`Transferred ${loan} to ${key}.`)
+              messages.push(`Your balance is ${final_balance}`)
+            }
+          }
+        }
+      }
+
       await this.updateBalanceByAccount(
         client_obj,
         this.state.active_client,
-        balance,
+        final_balance,
       )
+
+      if (final_balance === balance && balance > 0) {
+        messages.push(`Topup successful, current balance is: ${final_balance}.`)
+      }
+
+      const adjustment_messages = this.checkAdjustment(this.state.active_client)
+
       this.setState({ clients: client_obj })
-      this.addHistory(`Topup successful, current amount is: ${balance}`)
+      this.addHistory([...messages, ...adjustment_messages])
     }
   }
 
@@ -95,8 +121,7 @@ class Terminal extends Component {
       clients_obj.push({
         name: client_name,
         balance: 0,
-        debit: {},
-        credit: {},
+        adjustment: {},
       })
       this.setState({
         clients: clients_obj,
@@ -106,8 +131,8 @@ class Terminal extends Component {
       })
     }
     const default_messages = [
-      `Hello ${client_name}`,
-      `Your balance is ${this.getClientByName(client_name).balance}`,
+      `Hello ${client_name}.`,
+      `Your balance is ${this.getClientByName(client_name).balance}.`,
     ]
     const adjustment_messages = this.checkAdjustment(client_name)
 
@@ -121,11 +146,11 @@ class Terminal extends Component {
     const is_self = to_client_name === this.state.active_client
 
     if (is_existing_client && is_self) {
-      this.addHistory("The account entered doesn't exist")
+      this.addHistory("The account entered doesn't exist.")
       this.clearInput()
       return
     } else if (isNaN(amount)) {
-      this.addHistory('Please enter a valid amount')
+      this.addHistory('Please enter a valid amount.')
       this.clearInput()
       return
     } else {
@@ -164,11 +189,17 @@ class Terminal extends Component {
         clients: client_obj,
       })
     }
-
-    // console.log(this.getClientByName(this.state.active_client))
     // deduct account balance
     // add balance to recipient
     // check negative
+    const default_messages = [
+      `Your balance is ${
+        this.getClientByName(this.state.active_client).balance
+      }.`,
+    ]
+    const adjustment_messages = this.checkAdjustment(this.state.active_client)
+
+    this.addHistory([...default_messages, ...adjustment_messages])
   }
 
   isEmptyObject(obj) {
@@ -179,17 +210,16 @@ class Terminal extends Component {
     const client_info = this.getClientByName(client_name)
     let adjustment_messages = []
 
-    if (!this.isEmptyObject(client_info.debit)) {
-      Object.keys(client_info.debit).forEach(function (key) {
-        const string = `You owe ${client_info.debit[key].name} ${client_info.debit[key].amount}.`
-        adjustment_messages.push(string)
-      })
-    }
-
-    if (!this.isEmptyObject(client_info.credit)) {
-      Object.keys(client_info.credit).forEach(function (key) {
-        const string = `${client_info.credit[key].name} owes you ${client_info.credit[key].amount}.`
-        adjustment_messages.push(string)
+    if (!this.isEmptyObject(client_info.adjustment)) {
+      Object.keys(client_info.adjustment).forEach(function (key) {
+        if (client_info.adjustment[key].debit > 0) {
+          const string = `You owe ${key} ${client_info.adjustment[key].debit}.`
+          adjustment_messages.push(string)
+        }
+        if (client_info.adjustment[key].credit > 0) {
+          const string = `${key} owes you ${client_info.adjustment[key].credit}.`
+          adjustment_messages.push(string)
+        }
       })
     }
 
@@ -197,19 +227,24 @@ class Terminal extends Component {
   }
 
   updateAdjustment(client_obj, debitor_name, creditor_name, adjustment) {
-    const client_debit = this.getClientByName(debitor_name).debit
-    const client_credit = this.getClientByName(creditor_name).credit
-    const debit = { name: debitor_name, amount: adjustment }
-    const credit = { name: creditor_name, amount: adjustment }
+    const client_debit = this.getClientByName(debitor_name).adjustment
+    const client_credit = this.getClientByName(creditor_name).adjustment
+    const debit = { debit: adjustment }
+    const credit = { credit: adjustment }
     const promise = new Promise(function (resolve) {
       client_obj.find(
         (client) => client.name.toLowerCase() === debitor_name.toLowerCase(),
-      ).debit = Object.assign(client_debit, { credit })
+      ).adjustment = Object.assign(client_debit, {
+        [`${creditor_name}`.toLowerCase()]: debit,
+      })
 
       client_obj.find(
         (client) => client.name.toLowerCase() === creditor_name.toLowerCase(),
-      ).credit = Object.assign(client_credit, { debit })
+      ).adjustment = Object.assign(client_credit, {
+        [`${debitor_name}`.toLowerCase()]: credit,
+      })
 
+      console.log(client_obj)
       resolve(client_obj)
     })
     return promise
