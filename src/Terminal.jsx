@@ -1,8 +1,8 @@
-import React, { Component } from 'react'
+import React from 'react'
 import { Scrollbars } from 'react-custom-scrollbars'
 import './App.css'
 
-class Terminal extends Component {
+class Terminal extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
@@ -145,7 +145,7 @@ class Terminal extends Component {
     })
     const is_self = to_client_name === this.state.active_client
 
-    if (is_existing_client && is_self) {
+    if (!is_existing_client || is_self) {
       this.addHistory("The account entered doesn't exist.")
       this.clearInput()
       return
@@ -284,11 +284,15 @@ class Terminal extends Component {
 
     this.registerCommands()
     this.showWelcomeMsg()
-    term.focus()
+    if (term) {
+      term.focus()
+    }
   }
 
   componentDidUpdate() {
-    this.scrollBar.scrollToBottom()
+    if (this.scrollBar) {
+      this.scrollBar.scrollToBottom()
+    }
   }
 
   handleInput(e) {
