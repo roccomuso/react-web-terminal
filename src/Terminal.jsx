@@ -244,7 +244,6 @@ class Terminal extends Component {
         [`${debitor_name}`.toLowerCase()]: credit,
       })
 
-      console.log(client_obj)
       resolve(client_obj)
     })
     return promise
